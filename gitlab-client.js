@@ -1,8 +1,10 @@
 var request = require('request');
 var async = require('async');
 
-function GitlabClient(url) {
+
+function GitlabClient(url, options) {
 	this.url = url + '/api/v3/';
+	this.options = options;
 }
 
 GitlabClient.prototype.auth = function(username, password, cb) {
@@ -14,7 +16,8 @@ GitlabClient.prototype.auth = function(username, password, cb) {
 			login: isEmail ? undefined : username,
 			email: isEmail ? username : undefined,
 			password: password
-		}
+		},
+		ca: this.options.ca
 	};
 	request(params, function(error, response, body) {
 		if(error) return cb(error);
@@ -36,8 +39,36 @@ GitlabClient.prototype.paginate = function(params, cb) {
 			if(response.statusCode < 200 || response.statusCode >= 300) return next('Invalid status code ' + response.statusCode);
 			body = JSON.parse(body);
 			Array.prototype.push.apply(results, body);
-			if(!body.length) hasMore = false;
-			params.qs.page++;
+			delete params.qs;
+			if (!response.headers.link) {
+				hasMore = false;
+			} else {
+				var linkParts = response.headers.link.split(/ *, */g);
+				var linkNext;
+				linkParts.forEach(function(part) {
+					var partParts = part.split(/ *; */g);
+					var rel, link;
+					partParts.forEach(function(partPart) {
+						var matches;
+						matches = /^rel="([a-z]+)"$/.exec(partPart);
+						if (matches) {
+							rel = matches[1];
+						}
+						matches = /^<(.*)>$/.exec(partPart);
+						if (matches) {
+							link = matches[1];
+						}
+					});
+					if (rel === 'next' && link) {
+						linkNext = link;
+					}
+				});
+				if (linkNext) {
+					params.url = linkNext;
+				} else {
+					hasMore = false;
+				}
+			}
 			next();
 		});
 	}, function(error) {
@@ -52,7 +83,8 @@ GitlabClient.prototype.listUsers = function(search, privateToken, cb) {
 		qs: {
 			private_token: privateToken,
 			search: search
-		}
+		},
+		ca: this.options.ca
 	}, cb);
 };
 
@@ -61,7 +93,8 @@ GitlabClient.prototype.listAllProjects = function(privateToken, cb) {
 		url: this.url + 'projects/all',
 		qs: {
 			private_token: privateToken
-		}
+		},
+		ca: this.options.ca
 	}, cb);
 };
 
@@ -70,7 +103,8 @@ GitlabClient.prototype.getProject = function(id, privateToken, cb) {
 		url: this.url + 'projects/' + encodeURIComponent(id),
 		qs: {
 			private_token: privateToken
-		}
+		},
+		ca: this.options.ca
 	}, function(error, response, body) {
 		if(error) return cb(error);
 		if(response.statusCode == 404) return cb(null, null);
@@ -85,7 +119,8 @@ GitlabClient.prototype.listProjects = function(search, privateToken, cb) {
 		qs: {
 			private_token: privateToken,
 			search: search
-		}
+		},
+		ca: this.options.ca
 	}, cb);
 };
 
@@ -94,7 +129,8 @@ GitlabClient.prototype.getProjectTeamMember = function(projectId, userId, privat
 		url: this.url + 'projects/' + encodeURIComponent(projectId) + '/members/' + encodeURIComponent(userId),
 		qs: {
 			private_token: privateToken
-		}
+		},
+		ca: this.options.ca
 	}, function(error, response, body) {
 		if(error) return cb(error);
 		if(response.statusCode == 404) return cb(null, null);
@@ -108,7 +144,8 @@ GitlabClient.prototype.listGroupMembers = function(groupId, privateToken, cb) {
 		url: this.url + 'groups/' + groupId + '/members',
 		qs: {
 			private_token: privateToken
-		}
+		},
+		ca: this.options.ca
 	}, cb);
 };
 

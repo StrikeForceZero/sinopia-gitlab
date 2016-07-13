@@ -1,3 +1,4 @@
+var fs = require('fs');
 var LRU = require('lru-cache');
 var GitlabClient = require('./gitlab-client');
 
@@ -41,7 +42,10 @@ function SinopiaGitlab(settings, params) {
 	this.logger = params.logger;
 	this.sinopiaConfig = params.config;
 	if(!settings.gitlab_server) throw new Error('sinopia-gitlab missing config option gitlab_server');
-	this.gitlab = new GitlabClient(settings.gitlab_server);
+	this.gitlab = new GitlabClient(
+		settings.gitlab_server,
+		{ ca: settings.gitlab_ca_file && fs.readFileSync(settings.gitlab_ca_file) }
+	);
 	this.adminUsername = settings.gitlab_admin_username;
 	this.adminPassword = settings.gitlab_admin_password;
 	this.searchNamespaces = settings.gitlab_namespaces || null;
