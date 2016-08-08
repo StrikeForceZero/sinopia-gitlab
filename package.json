@@ -1,5 +1,5 @@
 {
-  "name": "@dits/sinopia-gitlab",
+  "name": "sinopia-gitlab",
   "version": "0.0.1",
   "description": "Gitlab authentication plugin for sinopia",
   "main": "./sinopia-gitlab.js",

@@ -92,15 +92,15 @@ SinopiaGitlab.prototype._getGitlabProject = function(packageName, cb) {
 	}
 	self._getAdminToken(function(error, token) {
 		if(error) return cb(error);
-		self.gitlab.listProjects(packageName, token, function(error, results) {
+		var parts = packageName.split('/');
+		if (parts.length !== 2) return cb(new Error('Incorrect package name: ' + packageName));
+		var groupName = parts[0].replace('@', '');
+		var projectName = parts[1];
+		self.gitlab.listProjects(projectName, token, function(error, results) {
 			if(error) return cb(error);
 			if(self.searchNamespaces) {
 				results = results.filter(function(project) {
-					if(self.searchNamespaces.indexOf(project.namespace.path) === -1) {
-						return false;
-					} else {
-						return true;
-					}
+					return project.namespace.path === groupName;
 				});
 			}
 			if(!results.length) return cb(new Error('Project not found: ' + packageName));
