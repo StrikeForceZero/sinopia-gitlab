@@ -87,6 +87,7 @@ function SinopiaGitlab(settings, params) {
 		settings.gitlab_server,
 		{ ca: settings.gitlab_ca_file && fs.readFileSync(settings.gitlab_ca_file) }
 	);
+	this.adminPrivateToken = settings.gitlab_admin_private_token;
 	this.adminUsername = settings.gitlab_admin_username;
 	this.adminPassword = settings.gitlab_admin_password;
 	this.searchNamespaces = settings.gitlab_namespaces || null;
@@ -95,13 +96,17 @@ function SinopiaGitlab(settings, params) {
 
 SinopiaGitlab.prototype._getAdminToken = function(cb) {
 	var self = this;
-	checkCache('token-' + self.adminUsername, null, 3600, function(key, extraParams, cb) {
-		self.gitlab.auth(self.adminUsername, self.adminPassword, function(error, user) {
-			if(error) return cb(error);
-			cacheSet('user-' + self.adminUsername, user);
-			cb(null, user.private_token);
-		});
-	}, cb);
+	if (self.adminPrivateToken) {
+		cb(null, self.adminPrivateToken);
+	} else {
+		checkCache('token-' + self.adminUsername, null, 3600, function(key, extraParams, cb) {
+			self.gitlab.auth(self.adminUsername, self.adminPassword, function(error, user) {
+				if(error) return cb(error);
+				cacheSet('user-' + self.adminUsername, user);
+				cb(null, user.private_token);
+			});
+		}, cb);
+	}
 };
 
 SinopiaGitlab.prototype._getGitlabUser = function(username, cb) {
