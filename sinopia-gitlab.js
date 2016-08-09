@@ -99,7 +99,7 @@ SinopiaGitlab.prototype._getAdminToken = function(cb) {
 	if (self.adminPrivateToken) {
 		cb(null, self.adminPrivateToken);
 	} else {
-		checkCache('token-' + self.adminUsername, null, 3600, function(key, extraParams, cb) {
+		checkCache('token-' + self.adminUsername, null, 60, function(key, extraParams, cb) {
 			self.gitlab.auth(self.adminUsername, self.adminPassword, function(error, user) {
 				if(error) return cb(error);
 				cacheSet('user-' + self.adminUsername, user);
@@ -111,7 +111,7 @@ SinopiaGitlab.prototype._getAdminToken = function(cb) {
 
 SinopiaGitlab.prototype._getGitlabUser = function(username, cb) {
 	var self = this;
-	checkCache('user-' + username, null, 3600, function(key, extraParams, cb) {
+	checkCache('user-' + username, null, 60, function(key, extraParams, cb) {
 		self._getAdminToken(function(error, token) {
 			self.gitlab.listUsers(username, token, function(error, results) {
 				if(error) return cb(error);
@@ -127,7 +127,7 @@ SinopiaGitlab.prototype._getGitlabUser = function(username, cb) {
 
 SinopiaGitlab.prototype._getGitlabProject = function(packageName, cb) {
 	var self = this;
-	checkCache('project-' + packageName, null, 3600, function(key, extraParams, cb) {
+	checkCache('project-' + packageName, null, 60, function(key, extraParams, cb) {
 		self._getAdminToken(function(error, token) {
 			if(error) return cb(error);
 			var projectName;
@@ -171,7 +171,7 @@ SinopiaGitlab.prototype._getGitlabProjectMember = function(projectId, userId, cb
 
 SinopiaGitlab.prototype._getGitlabGroupMember = function(groupId, userId, cb) {
 	var self = this;
-	checkCache('groupmember-' + groupId + '-' + userId, null, 600, function(key, extraParams, cb) {
+	checkCache('groupmember-' + groupId + '-' + userId, null, 60, function(key, extraParams, cb) {
 		self._getAdminToken(function(error, token) {
 			if(error) return cb(error);
 			self.gitlab.listGroupMembers(groupId, token, function(error, members) {
@@ -192,7 +192,7 @@ SinopiaGitlab.prototype.authenticate = function(username, password, cb) {
 	// on failed password: cb(null, false)
 	// on success: cb(null, [username, groups...])
 	var self = this;
-	checkCache('auth-' + username, password, 900, function(key, extraParams, cb) {
+	checkCache('auth-' + username, password, 60, function(key, extraParams, cb) {
 		self.gitlab.auth(username, password, function(error, user) {
 			if(error) {
 				self.logger.error('Error authenticating to gitlab: ' + error);
@@ -241,7 +241,7 @@ SinopiaGitlab.prototype.allow_access = function(user, package, cb) {
 		err.status = 403;
 		cb(err);
 	}
-	if(cacheGet('access-' + packageName + '-' + (user.name || 'undefined'), 900)) {
+	if(cacheGet('access-' + packageName + '-' + (user.name || 'undefined'), 60)) {
 		setImmediate(function() {
 			cb(null, true);
 		});
@@ -289,7 +289,7 @@ SinopiaGitlab.prototype.allow_publish = function(user, package, cb) {
 		err.status = 403;
 		cb(err);
 	}
-	if(cacheGet('publish-' + packageName + '-' + (user.name || 'undefined'), 900)) {
+	if(cacheGet('publish-' + packageName + '-' + (user.name || 'undefined'), 60)) {
 		setImmediate(function() {
 			cb(null, true);
 		});
