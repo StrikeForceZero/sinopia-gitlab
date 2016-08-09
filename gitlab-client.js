@@ -115,7 +115,7 @@ GitlabClient.prototype.getProject = function(id, privateToken, cb) {
 
 GitlabClient.prototype.listProjects = function(search, privateToken, cb) {
 	this.paginate({
-		url: this.url + 'projects',
+		url: this.url + 'projects/all',
 		qs: {
 			private_token: privateToken,
 			search: search
