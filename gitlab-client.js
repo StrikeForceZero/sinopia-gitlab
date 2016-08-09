@@ -88,11 +88,12 @@ GitlabClient.prototype.listUsers = function(search, privateToken, cb) {
 	}, cb);
 };
 
-GitlabClient.prototype.listAllProjects = function(privateToken, cb) {
+GitlabClient.prototype.listAllProjects = function(search, privateToken, cb) {
 	this.paginate({
 		url: this.url + 'projects/all',
 		qs: {
-			private_token: privateToken
+			private_token: privateToken,
+			search: search
 		},
 		ca: this.options.caFile
 	}, cb);
