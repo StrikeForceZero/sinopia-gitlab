@@ -98,6 +98,7 @@ function SinopiaGitlab(settings, params) {
 	this.searchNamespaces = settings.gitlab_namespaces || null;
 	this.useScopeAsGroup = settings.gitlab_use_scope_as_group || false;
 	this.projectPrefix = settings.gitlab_project_prefix || '';
+	this.publishUsers = settings.gitlab_publish_users || [];
 }
 
 SinopiaGitlab.prototype._getAdminToken = function(cb) {
@@ -297,6 +298,9 @@ SinopiaGitlab.prototype.allow_publish = function(user, package, cb) {
 		if(error) return cb(error);
 		// Only accessible if explicit access is granted
 		if(!user.name) return denied();
+		if(this.publishUsers.indexOf(user.name) !== -1) {
+			return granted();
+		}
 		self._getGitlabUser(user.name, function(error, gitlabUser) {
 			if(error) return cb(error);
 			self._getGitlabProjectMember(project.id, gitlabUser.id, function(error, teamMember) {

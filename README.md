@@ -17,6 +17,7 @@ auth:
     #gitlab_admin_password: password123
     gitlab_use_scope_as_group: false            # Match scope as group (Default false)
     gitlab_project_prefix: npm-                 # Use this if you prefix your projects in gitlab
+    gitlab_publish_users: ["ciuser"]            # Users allowed to publish (Useful for CI) 
     #gitlab_ca_file: /path/to/ca/ca.crt         # (Optional) Use for self-signed certificates
 
 packages:
