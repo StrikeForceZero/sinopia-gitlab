@@ -83,14 +83,20 @@ function SinopiaGitlab(settings, params) {
 	this.logger = params.logger;
 	this.sinopiaConfig = params.config;
 	if(!settings.gitlab_server) throw new Error('sinopia-gitlab missing config option gitlab_server');
-	this.gitlab = new GitlabClient(
-		settings.gitlab_server,
-		{ ca: settings.gitlab_ca_file && fs.readFileSync(settings.gitlab_ca_file) }
-	);
+	var caFile;
+	if(settings.gitlab_ca_file) {
+		try {
+			caFile = fs.readFileSync(settings.gitlab_ca_file);
+		} catch (e) {
+			throw new Error('sinopia-gitlab error loading CA file');
+		}
+	}
+	this.gitlab = new GitlabClient(settings.gitlab_server, { caFile: caFile });
 	this.adminPrivateToken = settings.gitlab_admin_private_token;
 	this.adminUsername = settings.gitlab_admin_username;
 	this.adminPassword = settings.gitlab_admin_password;
 	this.searchNamespaces = settings.gitlab_namespaces || null;
+	this.useScopeAsGroup = settings.gitlab_use_scope_as_group || false;
 	this.projectPrefix = settings.gitlab_project_prefix || '';
 }
 
@@ -99,7 +105,7 @@ SinopiaGitlab.prototype._getAdminToken = function(cb) {
 	if (self.adminPrivateToken) {
 		cb(null, self.adminPrivateToken);
 	} else {
-		checkCache('token-' + self.adminUsername, null, 60, function(key, extraParams, cb) {
+		checkCache('token-' + self.adminUsername, null, 3600, function(key, extraParams, cb) {
 			self.gitlab.auth(self.adminUsername, self.adminPassword, function(error, user) {
 				if(error) return cb(error);
 				cacheSet('user-' + self.adminUsername, user);
@@ -130,28 +136,20 @@ SinopiaGitlab.prototype._getGitlabProject = function(packageName, cb) {
 	checkCache('project-' + packageName, null, 60, function(key, extraParams, cb) {
 		self._getAdminToken(function(error, token) {
 			if(error) return cb(error);
-			var projectName;
-			var parts = packageName.split('/');
-			if (parts.length === 1) {
-				projectName = parts[0];
-			} else if (parts.length === 2) {
-				projectName = parts[1];
-			} else {
-				return cb(new Error('Incorrect package name: ' + packageName));
-			}
-			if (self.projectPrefix) {
-				projectName = self.projectPrefix + projectName;
-			}
-			self.gitlab.listProjects(projectName, token, function(error, results) {
-				if(error) return cb(error);
-				if(self.searchNamespaces) {
-					results = results.filter(function(project) {
-						if(self.searchNamespaces.indexOf(project.namespace.path) === -1) {
-							return false;
-						} else {
-							return true;
-						}
-					});
+			self.gitlab.listAllProjects(packageName, token, function(error, results) {
+				var projectName;
+				var groupName;
+				var parts = packageName.split('/');
+				if (parts.length === 1) {
+					projectName = parts[0];
+				} else if (parts.length === 2) {
+					groupName = parts[0].replace('@', '');
+					projectName = parts[1];
+				} else {
+					return cb(new Error('Incorrect package name: ' + packageName));
+				}
+				if (self.projectPrefix) {
+					projectName = self.projectPrefix + projectName;
 				}
 				if(!results.length) return cb(new Error('Project not found: ' + packageName));
 				var project = results[0];

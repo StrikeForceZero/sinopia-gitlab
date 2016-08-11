@@ -17,7 +17,7 @@ GitlabClient.prototype.auth = function(username, password, cb) {
 			email: isEmail ? username : undefined,
 			password: password
 		},
-		ca: this.options.ca
+		ca: this.options.caFile
 	};
 	request(params, function(error, response, body) {
 		if(error) return cb(error);
@@ -84,17 +84,18 @@ GitlabClient.prototype.listUsers = function(search, privateToken, cb) {
 			private_token: privateToken,
 			search: search
 		},
-		ca: this.options.ca
+		ca: this.options.caFile
 	}, cb);
 };
 
-GitlabClient.prototype.listAllProjects = function(privateToken, cb) {
+GitlabClient.prototype.listAllProjects = function(search, privateToken, cb) {
 	this.paginate({
 		url: this.url + 'projects/all',
 		qs: {
-			private_token: privateToken
+			private_token: privateToken,
+			search: search
 		},
-		ca: this.options.ca
+		ca: this.options.caFile
 	}, cb);
 };
 
@@ -104,7 +105,7 @@ GitlabClient.prototype.getProject = function(id, privateToken, cb) {
 		qs: {
 			private_token: privateToken
 		},
-		ca: this.options.ca
+		ca: this.options.caFile
 	}, function(error, response, body) {
 		if(error) return cb(error);
 		if(response.statusCode == 404) return cb(null, null);
@@ -120,7 +121,7 @@ GitlabClient.prototype.listProjects = function(search, privateToken, cb) {
 			private_token: privateToken,
 			search: search
 		},
-		ca: this.options.ca
+		ca: this.options.caFile
 	}, cb);
 };
 
@@ -130,7 +131,7 @@ GitlabClient.prototype.getProjectTeamMember = function(projectId, userId, privat
 		qs: {
 			private_token: privateToken
 		},
-		ca: this.options.ca
+		ca: this.options.caFile
 	}, function(error, response, body) {
 		if(error) return cb(error);
 		if(response.statusCode == 404) return cb(null, null);
@@ -145,7 +146,7 @@ GitlabClient.prototype.listGroupMembers = function(groupId, privateToken, cb) {
 		qs: {
 			private_token: privateToken
 		},
-		ca: this.options.ca
+		ca: this.options.caFile
 	}, cb);
 };
 
