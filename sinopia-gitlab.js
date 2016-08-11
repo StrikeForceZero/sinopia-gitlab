@@ -137,22 +137,22 @@ SinopiaGitlab.prototype._getGitlabProject = function(packageName, cb) {
 	checkCache('project-' + packageName, null, 60, function(key, extraParams, cb) {
 		self._getAdminToken(function(error, token) {
 			if(error) return cb(error);
-			self.gitlab.listAllProjects(packageName, token, function(error, results) {
-				var projectName;
-				var groupName;
-				var parts = packageName.split('/');
-				if (parts.length === 1) {
-					projectName = parts[0];
-				} else if (parts.length === 2) {
-					groupName = parts[0].replace('@', '');
-					projectName = parts[1];
-				} else {
-					return cb(new Error('Incorrect package name: ' + packageName));
-				}
-				if (self.projectPrefix) {
-					projectName = self.projectPrefix + projectName;
-				}
-				if(!results.length) return cb(new Error('Project not found: ' + packageName));
+			var projectName;
+			var groupName;
+			var parts = packageName.split('/');
+			if (parts.length === 1) {
+				projectName = parts[0];
+			} else if (parts.length === 2) {
+				groupName = parts[0].replace('@', '');
+				projectName = parts[1];
+			} else {
+				return cb(new Error('Incorrect package name: ' + packageName));
+			}
+			if (self.projectPrefix) {
+				projectName = self.projectPrefix + projectName;
+			}
+			self.gitlab.listAllProjects(projectName, token, function(error, results) {
+				if(!results.length) return cb(new Error('Project not found: ' + projectName));
 				var project = results[0];
 				cb(null, project);
 			});
