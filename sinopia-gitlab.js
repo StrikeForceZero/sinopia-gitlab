@@ -194,8 +194,7 @@ SinopiaGitlab.prototype.authenticate = function(username, password, cb) {
 	checkCache('auth-' + username, password, 60, function(key, extraParams, cb) {
 		self.gitlab.auth(username, password, function(error, user) {
 			if(error) {
-				self.logger.error('Error authenticating to gitlab: ' + error);
-				cb(null, false, false);
+				cb(null, false);
 			} else {
 				cacheSet('user-' + username, user);
 				cacheSet('token-' + username, user.private_token);
