@@ -206,7 +206,7 @@ SinopiaGitlab.prototype.authenticate = function(username, password, cb) {
 		});
 	}, function(error, cachedAuth) {
 		if (cachedAuth.password !== password) {
-			return cb(new Error('Password does not match'));
+			return cb(null, false);
 		}
 		self._getGitlabUser(username, function(error) {
 			if (error) return cb(error);
