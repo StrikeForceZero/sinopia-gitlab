@@ -286,6 +286,10 @@ SinopiaGitlab.prototype.allow_access = function(user, package, cb) {
 		}
 		// Only accessible if explicit access is granted
 		if(!user.name) return denied();
+		// If can publish by name, can also access
+		if(self.publishUsers.indexOf(user.name) !== -1) {
+			return granted();
+		}
 		self._getGitlabUser(user.name, function(error, gitlabUser) {
 			if(error) return cb(error);
 			self._getGitlabProjectMember(project.id, gitlabUser.id, function(error, teamMember) {
