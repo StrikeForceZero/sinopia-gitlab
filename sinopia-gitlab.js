@@ -166,6 +166,10 @@ SinopiaGitlab.prototype._getGitlabProject = function(packageName, cb) {
 					var err = Error('Gitlab Project "' + projectName + '" not found');
 					err.status = 403;
 					return cb(err);
+				} else if (results.length > 1) {
+					var err = Error('Cannot match Gitlab project because more than one matched ' + results.join(', '));
+					err.status = 403;
+					return cb(err);
 				}
 				var project = results[0];
 				cb(null, project);
