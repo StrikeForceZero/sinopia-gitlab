@@ -162,16 +162,24 @@ SinopiaGitlab.prototype._getGitlabProject = function(packageName, cb) {
 				projectName = self.projectPrefix + projectName;
 			}
 			self.gitlab.listAllProjects(projectName, token, function(error, results) {
-				if(!results.length) {
+				// Filter by exact match (Gitlab API uses LIKE to query)
+				var projectsMatched = results.filter(function (project) {
+					return project.path === projectName;
+				});
+				if (projectsMatched.length === 0) {
 					var err = Error('Gitlab Project "' + projectName + '" not found');
 					err.status = 403;
 					return cb(err);
-				} else if (results.length > 1) {
-					var err = Error('Cannot match Gitlab project because more than one matched ' + results.join(', '));
+				} else if (projectsMatched.length > 1) {
+					var projectNames = []; 
+					projectsMatched.forEach(function(project) {
+						projectNames.push(project.path_with_namespace);
+					});
+					var err = Error('More than one Gitlab project matched [' + projectNames.join(', ') + ']');
 					err.status = 403;
 					return cb(err);
 				}
-				var project = results[0];
+				var project = projectsMatched[0];
 				cb(null, project);
 			});
 		});
