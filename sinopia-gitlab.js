@@ -121,11 +121,19 @@ SinopiaGitlab.prototype._getGitlabUser = function(username, cb) {
 	checkCache('user-' + username, null, 60, function(key, extraParams, cb) {
 		self._getAdminToken(function(error, token) {
 			self.gitlab.listUsers(username, token, function(error, results) {
-				if(error) return cb(error);
+				if(error) {
+					var err = Error('Error getting user list');
+					err.status = 403;
+					return cb(err);
+				}
 				results = results.filter(function(user) {
 					return user.username === username || user.email.toLowerCase() === username.toLowerCase();
 				});
-				if(!results.length) return cb(new Error('Could not find user ' + username));
+				if(!results.length) {
+					var err = Error('Could not find user ' + username);
+					err.status = 403;
+					return cb(err);
+				}
 				cb(null, results[0]);
 			});
 		});
@@ -146,13 +154,19 @@ SinopiaGitlab.prototype._getGitlabProject = function(packageName, cb) {
 				groupName = parts[0].replace('@', '');
 				projectName = parts[1];
 			} else {
-				return cb(new Error('Incorrect package name: ' + packageName));
+				var err = Error('Incorrect package name: ' + packageName);
+				err.status = 403;
+				return cb(err);
 			}
 			if (self.projectPrefix) {
 				projectName = self.projectPrefix + projectName;
 			}
 			self.gitlab.listAllProjects(projectName, token, function(error, results) {
-				if(!results.length) return cb(new Error('Project not found: ' + projectName));
+				if(!results.length) {
+					var err = Error('Gitlab Project "' + projectName + '" not found');
+					err.status = 403;
+					return cb(err);
+				}
 				var project = results[0];
 				cb(null, project);
 			});
@@ -174,7 +188,11 @@ SinopiaGitlab.prototype._getGitlabGroupMember = function(groupId, userId, cb) {
 		self._getAdminToken(function(error, token) {
 			if(error) return cb(error);
 			self.gitlab.listGroupMembers(groupId, token, function(error, members) {
-				if(error) return cb(error);
+				if(error) {
+					var err = Error('Error getting group memebers');
+					err.status = 403;
+					return cb(err);
+				}
 				members = members.filter(function(member) {
 					return member.id === userId;
 				});
