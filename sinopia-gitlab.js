@@ -164,7 +164,7 @@ SinopiaGitlab.prototype._getGitlabProject = function(packageName, cb) {
 			self.gitlab.listAllProjects(projectName, token, function(error, results) {
 				// Filter by exact match (Gitlab API uses LIKE to query)
 				var projectsMatched = results.filter(function (project) {
-					return project.path === projectName;
+					return project.namespace.path === groupName && project.path === projectName;
 				});
 				if (projectsMatched.length === 0) {
 					var err = Error('Gitlab Project "' + projectName + '" not found');
